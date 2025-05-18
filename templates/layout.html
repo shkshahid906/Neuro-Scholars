@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Soil Fertility Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-green-100 min-h-screen flex flex-col">
+    {% include 'navbar.html' %}
+    <div class="flex flex-1 overflow-hidden">
+        {% include 'sidebar.html' %}
+        <main class="flex-1 overflow-auto p-6">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    <script>
+        document.getElementById('menuToggle').addEventListener('click', () => {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('hidden');
+        });
+
+        const tabs = document.querySelectorAll('.tab-link');
+        const contents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = tab.getAttribute('data-target');
+                contents.forEach(c => c.classList.add('hidden'));
+                tabs.forEach(t => t.classList.remove('bg-green-200'));
+                document.getElementById(target).classList.remove('hidden');
+                tab.classList.add('bg-green-200');
+            });
+        });
+    </script>
+</body>
+</html>

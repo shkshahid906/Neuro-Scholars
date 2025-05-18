@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Smart Agriculture Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex h-screen bg-gray-100">
+
+  <!-- Main Content -->
+  <main class="flex-1 p-8 overflow-y-auto">
+    <h1 class="text-3xl font-bold mb-6 text-green-900">Live Soil Data</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="bg-white p-6 rounded shadow text-center">
+        <h2 class="text-xl font-semibold text-green-700">Nitrogen (N)</h2>
+        <p id="soilN" class="text-2xl font-bold mt-2 text-green-900">--</p>
+      </div>
+      <div class="bg-white p-6 rounded shadow text-center">
+        <h2 class="text-xl font-semibold text-green-700">Phosphorus (P)</h2>
+        <p id="soilP" class="text-2xl font-bold mt-2 text-green-900">--</p>
+      </div>
+      <div class="bg-white p-6 rounded shadow text-center">
+        <h2 class="text-xl font-semibold text-green-700">Potassium (K)</h2>
+        <p id="soilK" class="text-2xl font-bold mt-2 text-green-900">--</p>
+      </div>
+      <div class="bg-white p-6 rounded shadow text-center">
+        <h2 class="text-xl font-semibold text-green-700">pH Level</h2>
+        <p id="soilPH" class="text-2xl font-bold mt-2 text-green-900">--</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Firebase JS -->
+  <script type="module" src="../static/js/firbase.js"></script>
+
+</body>
+</html>

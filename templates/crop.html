@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Crop Recommendation System 🌾</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Firebase SDK scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body class="bg-green-50 min-h-screen flex items-center justify-center px-4">
+  <div class="bg-white rounded-2xl shadow-lg p-8 w-full max-w-xl">
+    <h2 class="text-3xl font-bold text-green-700 text-center mb-6">
+      🌱 Crop Recommendation System
+    </h2>
+
+    <form method="post" class="space-y-4" action="/recommend">
+      <div>
+        <label class="block font-semibold text-gray-700 mb-1">Nitrogen (N)</label>
+        <input type="number" step="any" name="N" required
+        class="w-full p-3 border border-green-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"/>
+
+      </div>
+
+      <div>
+        <label class="block font-semibold text-gray-700 mb-1">Phosphorous (P)</label>
+        <input type="number" step="any" name="P" required          class="w-full p-3 border border-green-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"/>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-gray-700 mb-1">Potassium (K)</label>
+        <input type="number" step="any" name="K" required          class="w-full p-3 border border-green-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"/>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-gray-700 mb-1">Temperature (°C)</label>
+        <input type="number" step="any" name="temperature" required
+               class="w-full p-3 border border-green-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"/>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-gray-700 mb-1">Humidity (%)</label>
+        <input type="number" step="any" name="humidity" required 
+               class="w-full p-3 border border-green-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"/>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-gray-700 mb-1">Soil pH</label>
+        <input type="number" step="any" name="ph" required           class="w-full p-3 border border-green-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"/>
+      </div>
+
+      <div>
+        <label class="block font-semibold text-gray-700 mb-1">Rainfall (mm)</label>
+        <input type="number" step="any" name="rainfall" required 
+               class="w-full p-3 border border-green-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"/>
+      </div>
+
+      <button type="submit"
+              class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded transition duration-200">
+        Recommend Crop
+      </button>
+    </form>
+
+    {% if crop_prediction %}
+    <div class="mt-6 text-center bg-green-100 text-green-800 p-4 rounded shadow">
+      ✅ Recommended Crop: <strong>{{ crop_prediction }}</strong>
+    </div>
+    {% endif %}
+
+  </div>
+<script>
+  // Initialize Firebase (already loaded compat SDKs)
+  const firebaseConfig = {
+    apiKey: "AIzaSyALwKMLL2EVEjgNOBvpsF1Egi2s-9tYDgc",
+    authDomain: "neuroscholars-be7d1.firebaseapp.com",
+    databaseURL: "https://neuroscholars-be7d1-default-rtdb.firebaseio.com",
+    projectId: "neuroscholars-be7d1",
+    storageBucket: "neuroscholars-be7d1.appspot.com",
+    messagingSenderId: "1030438938151",
+    appId: "1:1030438938151:web:7ca72fb446cec4535b9002",
+    measurementId: "G-EZN6T048HV"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+
+  // Reference to soil sensor data node
+  const dbRef = firebase.database().ref('sensorData');
+
+  dbRef.on("value", (snapshot) => {
+    const data = snapshot.val();
+    if(data) {
+      // Assuming sensorData is an object with multiple entries, each with a timestamp field
+      const entries = Object.values(data);
+      // Sort entries descending by timestamp
+      entries.sort((a, b) => b.timestamp - a.timestamp);
+      const latest = entries[0];
+
+      const setInputIfEmpty = (selector, value) => {
+  const el = document.querySelector(selector);
+  if(el && (el.value === "" || el.value === null || el.value === undefined)) {
+    el.value = value || "";
+  }
+};
+
+dbRef.on("value", (snapshot) => {
+  const data = snapshot.val();
+  if(data) {
+    const entries = Object.values(data);
+    entries.sort((a, b) => b.timestamp - a.timestamp);
+    const latest = entries[0];
+
+    setInputIfEmpty('input[name="N"]', latest.N);
+    setInputIfEmpty('input[name="P"]', latest.P);
+    setInputIfEmpty('input[name="K"]', latest.K);
+    setInputIfEmpty('input[name="temperature"]', latest.temperature);
+    setInputIfEmpty('input[name="humidity"]', latest.humidity);
+    setInputIfEmpty('input[name="ph"]', latest.ph);
+    setInputIfEmpty('input[name="rainfall"]', latest.rainfall);
+  }
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Soil Fertility Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="../static/style.css">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-green-100 min-h-screen flex flex-col">
+
+    <!-- NAVBAR -->
+    <nav class="bg-green-700 text-white px-6 py-4 flex justify-between items-center shadow-md">
+        <h1 class="text-xl font-bold">🌱 NeuroScholars - Smart Agriculture Dashboard</h1>
+        <button id="menuToggle" class="md:hidden focus:outline-none">
+            ☰
+        </button>
+        {% if user %}
+  <p>Welcome, {{ user }}! <a href="{{ url_for('logout') }}">Logout</a></p>
+{% endif %}
+    </nav>
+
+    <div class="flex flex-1 overflow-hidden">
+
+        <!-- SIDEBAR -->
+        <aside id="sidebar" class="bg-white shadow-md w-64 space-y-4 py-6 px-4 hidden md:block">
+            <h2 class="text-lg font-bold text-green-700 mb-4">Dashboard Sections</h2>
+            <ul class="space-y-2">
+                <li><button class="tab-link text-left w-full px-4 py-2 rounded bg-green-200" data-target="dashboard">📊 Dashboard</button></li>
+                <li><button class="tab-link text-left w-full px-4 py-2 hover:bg-green-100" data-target="soil">🌱 Soil</button></li>
+                <li><button class="tab-link text-left w-full px-4 py-2 hover:bg-green-100" data-target="weather">🌤️ Weather</button></li>
+                <li><button class="tab-link text-left w-full px-4 py-2 hover:bg-green-100" data-target="leaves">🍃 Leaves</button></li>
+                <li><button class="tab-link text-left w-full px-4 py-2 hover:bg-green-100" data-target="irrigation">💧 Irrigation</button></li>
+                <li><button class="tab-link text-left w-full px-4 py-2 hover:bg-green-100" data-target="crops">🌾 Crops</button></li>
+            </ul>
+        </aside>
+    
+
+        <!-- MAIN CONTENT -->
+        <main class="flex-1 overflow-auto p-6">
+            <div class="main">
+                <section id="dashboard" class="tab-content block">
+                {% include "dashboard.html" %}
+                </section>
+            </div>
+            <!-- SOIL TAB -->
+            <section id="soil" class="tab-content hidden">
+                {% include "soil_dashboard.html" %}
+            </section>
+
+            <!-- WEATHER TAB -->
+            <section id="weather" class="tab-content hidden">
+                {% include "weather.html" %}
+            </section>
+
+            <!-- LEAVES TAB -->
+             <section id="leaves" class="tab-content hidden">
+           <div class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="max-w-2xl w-full bg-white p-8 rounded-lg shadow-lg">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Leaf Disease Detection</h1>
+        <div class="mb-6 text-gray-600">
+            <p class="mb-4">This application uses deep learning to detect leaf diseases in real-time using your webcam or by uploading an image. The model is trained on 33 types of leaf diseases for crops like Apple, Cherry, Corn, Grape, Peach, Pepper, Potato, Strawberry, and Tomato.</p>
+            <p class="font-semibold">Please use only leaf images of the specified crops for accurate results.</p>
+        </div>
+        {% if error %}
+            <p class="text-red-500 mb-4">{{ error }}</p>
+        {% endif %}
+
+        <!-- Webcam Section -->
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold mb-2">Real-Time Webcam Detection</h2>
+            <video id="webcam" autoplay playsinline class="w-full h-auto rounded border border-gray-200 mb-4"></video>
+            <canvas id="canvas" class="hidden"></canvas>
+            <p id="prediction" class="text-center text-lg text-gray-700">Place a leaf in front of the webcam...</p>
+        </div>
+
+        <!-- Static Image Upload Section -->
+        <div>
+            <h2 class="text-xl font-semibold mb-2">Upload an Image</h2>
+            <form method="post" enctype="multipart/form-data" class="space-y-4" action="/leaves">
+                <input type="file" name="file" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition">Upload and Analyze</button>
+            </form>
+        </div>
+        {% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="text-red-600 mb-4">
+      {% for msg in messages %}
+        <li>{{ msg }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+        <!-- {% include "result.html" %} -->
+    </div>
+     
+    </section>
+
+            <!-- CROPS TAB -->
+            <section id="crops" class="tab-content hidden flex justify-center align-center">                   
+                     {% include "crop.html" %}
+            </section>
+
+            <!-- IRRIGATION TAB -->
+            <section id="irrigation" class="tab-content hidden"> 
+                {% include "irrigation.html" %}
+            </section>
+        </main>
+    </div>
+
+   <script>
+    // Sidebar toggle for mobile
+    document.getElementById('menuToggle').addEventListener('click', () => {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.toggle('hidden');
+    });
+
+    // Tab switching logic
+    const tabs = document.querySelectorAll('.tab-link');
+    const contents = document.querySelectorAll('.tab-content');
+
+    function activateTab(name) {
+        contents.forEach(c => c.classList.add('hidden'));
+        tabs.forEach(t => t.classList.remove('bg-green-200'));
+
+        const targetContent = document.getElementById(name);
+        if (targetContent) targetContent.classList.remove('hidden');
+
+        tabs.forEach(t => {
+            if (t.getAttribute('data-target') === name) {
+                t.classList.add('bg-green-200');
+            }
+        });
+    }
+
+    // Attach event listeners to tabs
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            activateTab(tab.getAttribute('data-target'));
+        });
+    });
+
+    // On page load, activate tab from Flask or default to dashboard
+    const flaskActiveTab = "{{ active_tab | default('dashboard') }}";
+    activateTab(flaskActiveTab);
+const video = document.getElementById('webcam');
+
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then(function(stream) {
+      video.srcObject = stream;
+      video.play();
+    })
+    .catch(function(err) {
+      console.error("Error accessing the webcam: " + err);
+      alert("Error accessing the webcam. Please check your permissions and try again.");
+    });
+} else {
+  alert("getUserMedia not supported by your browser.");
+}
+</script>
+
+<script>
+let canvas = document.getElementById('canvas');
+let predictionElement = document.getElementById('prediction');
+const context = canvas.getContext('2d');
+
+// Automatically capture a frame every 3 seconds and send to server
+setInterval(() => {
+    try {
+        // Set canvas size = video size
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        let imageData = canvas.toDataURL('image/jpeg');  // base64 string
+
+        fetch('/predict_leaf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: imageData })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.result) {
+                predictionElement.textContent = "Detected: " + data.result + ` (Confidence: ${data.confidence.toFixed(2)}%)`;
+            } else {
+                predictionElement.textContent = "No prediction received.";
+            }
+        })
+        .catch(err => {
+            console.error("Prediction error:", err);
+        });
+
+    } catch (e) {
+        console.error("Frame capture error:", e);
+    }
+}, 3000); // every 3 seconds
+</script>
+
+</body>
+</html>

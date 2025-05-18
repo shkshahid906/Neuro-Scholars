@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Result</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="max-w-2xl w-full bg-white p-8 rounded-lg shadow-lg">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Prediction Result</h1>
+        <img src="data:image/jpeg;base64,{{ image_data }}" alt="Uploaded Image" class="max-w-full h-auto mx-auto mb-6 rounded border border-gray-200">
+        <p class="text-center text-lg text-gray-700 mb-6">{{ result }}</p>
+        <a href="/" class="block w-full text-center bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition">Upload Another Image</a>
+    </div>
+</body>
+</html>

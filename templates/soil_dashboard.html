@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Soil Fertility Predictor</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+  <div class="bg-white rounded-2xl shadow-lg w-full p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+    <!-- INPUT FORM -->
+    <div class="md:col-span-1">
+      <h1 class="text-3xl font-bold mb-6 text-green-800 text-center">Soil Fertility Predictor</h1>
+      <form action="/predict" method="post" class="space-y-6">
+        <div>
+          <label class="block font-semibold mb-1">Nitrogen (N):</label>
+          <input type="number" name="N" step="any" required
+            class="w-full p-3 rounded border border-green-300 focus:outline-none focus:ring-2 focus:ring-green-500" />
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Phosphorus (P):</label>
+          <input type="number" name="P" step="any" required
+            class="w-full p-3 rounded border border-green-300 focus:outline-none focus:ring-2 focus:ring-green-500" />
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Potassium (K):</label>
+          <input type="number" name="K" step="any" required
+            class="w-full p-3 rounded border border-green-300 focus:outline-none focus:ring-2 focus:ring-green-500" />
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">pH Level:</label>
+          <input type="number" name="ph" step="any" required    
+            class="w-full p-3 rounded border border-green-300 focus:outline-none focus:ring-2 focus:ring-green-500" />
+        </div>
+
+        <button type="submit"
+          class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded font-semibold transition duration-200">
+          Predict Fertility
+        </button>
+      </form>
+
+      {% if prediction_text %}
+      <div class="mt-8 p-4 rounded text-center
+          {% if 'Highly Fertile' in prediction_text %}
+              bg-green-200 text-green-900
+          {% elif 'Fertile' in prediction_text %}
+              bg-yellow-200 text-yellow-800
+          {% elif 'Less Fertile' in prediction_text %}
+              bg-red-200 text-red-800
+          {% else %}
+              bg-gray-200 text-gray-800
+          {% endif %}">
+        {{ prediction_text }}
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- CHARTS -->
+   <!-- CHARTS + SUGGESTION -->
+<div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8 overflow-y-auto max-h-[calc(100vh-5rem)]">
+
+  <!-- Nutrients Chart -->
+  <div class="bg-green-50 p-6 rounded shadow">
+    <h2 class="text-xl font-semibold mb-4 text-green-700 text-center">Input Nutrients</h2>
+    <canvas id="inputBarChart"></canvas>
+  </div>
+
+  <!-- pH Chart -->
+  <div class="bg-green-50 p-6 rounded shadow">
+    <h2 class="text-xl font-semibold mb-4 text-green-700 text-center">pH Level</h2>
+    <canvas id="phBarChart"></canvas>
+  </div>
+
+  <!-- Pie chart + Suggestion side-by-side -->
+  <div class="md:col-span-2 flex flex-col md:flex-row gap-6 bg-green-50 p-6 rounded shadow">
+    <!-- Fertility Pie Chart -->
+    <div class="w-full md:w-1/2">
+      <h2 class="text-xl font-semibold mb-4 text-green-700 text-center">Fertility Prediction</h2>
+      <canvas id="fertilityPieChart"></canvas>
+    </div>
+
+    <!-- Gemini Suggestion -->
+    {% if suggestion_text %}
+    <div class="w-full md:w-1/2 max-h-72 overflow-y-auto bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+      <h2 class="text-xl font-bold text-yellow-800 mb-2">💡Suggestions:</h2>
+      <p class="text-gray-800 whitespace-pre-wrap">{{ suggestion_text }}</p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+
+  <!-- Firebase Initialization and Data Fetch -->
+  <script>
+    // Replace with your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyALwKMLL2EVEjgNOBvpsF1Egi2s-9tYDgc",
+      authDomain: "neuroscholars-be7d1.firebaseapp.com",
+      databaseURL: "https://neuroscholars-be7d1-default-rtdb.firebaseio.com",
+      projectId: "neuroscholars-be7d1",
+      storageBucket: "neuroscholars-be7d1.appspot.com",
+      messagingSenderId: "1030438938151",
+      appId: "1:1030438938151:web:7ca72fb446cec4535b9002",
+      measurementId: "G-EZN6T048HV"
+    };
+
+   window.onload = () => {
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const ref = db.ref("sensorData");
+
+  ref.on("value", (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
+
+    if (data.N !== undefined) document.querySelector('input[name="N"]').value = data.N;
+    if (data.P !== undefined) document.querySelector('input[name="P"]').value = data.P;
+    if (data.K !== undefined) document.querySelector('input[name="K"]').value = data.K;
+    if (data.ph !== undefined) document.querySelector('input[name="ph"]').value = data.ph;
+  });
+};
+
+  </script>
+
+{% if prediction_text %}
+<script>
+    const inputData = [
+        {{ request.form['N']|float }},
+        {{ request.form['P']|float }},
+        {{ request.form['K']|float }}
+    ];
+    const phData = [{{ request.form['ph']|float }}];
+
+    const labels = ['Nitrogen (N)', 'Phosphorus (P)', 'Potassium (K)'];
+    const inputBarColors = [
+        'rgba(34, 197, 94, 0.7)',
+        'rgba(34, 139, 34, 0.7)',
+        'rgba(101, 163, 13, 0.7)'
+    ];
+
+    const fertilityCategories = ['highly fertile', 'fertile', 'less fertile'];
+    const fertilityColors = ['#22c55e', '#eab308', '#ef4444'];
+
+    let fertilityPrediction = "{{ prediction_text|lower }}".replace(/predicted fertility[:\-]?\s*/i, "").trim();
+    let fertilityIndex = fertilityCategories.findIndex(cat => fertilityPrediction === cat);
+    if (fertilityIndex === -1) fertilityIndex = 2;
+
+    const pieData = fertilityCategories.map((cat, idx) => idx === fertilityIndex ? 1 : 0.2);
+    const pieColors = fertilityCategories.map((cat, idx) => idx === fertilityIndex ? fertilityColors[idx] : '#d1d5db');
+
+    if (window.inputChart) window.inputChart.destroy();
+    if (window.phChart) window.phChart.destroy();
+    if (window.fertilityChart) window.fertilityChart.destroy();
+
+    // Input nutrients chart
+    window.inputChart = new Chart(document.getElementById('inputBarChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Nutrient Levels',
+                data: inputData,
+                backgroundColor: inputBarColors,
+                borderColor: inputBarColors.map(c => c.replace('0.7', '1')),
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // pH chart
+    window.phChart = new Chart(document.getElementById('phBarChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['pH Level'],
+            datasets: [{
+                label: 'pH Value',
+                data: phData,
+                backgroundColor: ['rgba(132, 204, 22, 0.7)'],
+                borderColor: ['rgba(132, 204, 22, 1)'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { min: 0, max: 14 }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // Fertility pie chart
+    window.fertilityChart = new Chart(document.getElementById('fertilityPieChart').getContext('2d'), {
+        type: 'pie',
+        data: {
+            labels: fertilityCategories,
+            datasets: [{
+                data: pieData,
+                backgroundColor: pieColors,
+                borderColor: '#fff',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: '#065f46',
+                        font: { weight: 'bold', size: 14 }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            return label + (context.parsed > 0.5 ? ' (Predicted)' : '');
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endif %}
+</body>
+</html>
